@@ -4,14 +4,14 @@ from aiogram.dispatcher import FSMContext
 from aiogram.types import InlineKeyboardMarkup, ReplyKeyboardMarkup, KeyboardButton, ReplyKeyboardRemove, \
     InlineKeyboardButton
 
-from config import BOT_TOKEN, CHANNEL_ID
+from config import BOT_TOKEN, CHANNEL_ID, ADMINS
 
 storage = MemoryStorage()
 
 bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher(bot=bot, storage=storage)
 
-users = []
+users = [5596277119]
 
 register = ReplyKeyboardMarkup(
     keyboard=[
@@ -102,7 +102,7 @@ Ma'lumotlaringiz 📌:
 📞 Telefon raqam: {data['phone_number']}
 🎂 Yosh: {data['age']}
 🕰 Murojaat qilish vaqti: {data['time']}
-📁 Resume: Tepada
+📁 Resume: Yubordingiz
 
 ‼️ Ushbu ma'lumotlaringiz tasdiqlaysizmi?
 """
@@ -135,6 +135,37 @@ async def accept_handler(call: types.CallbackQuery, state: FSMContext):
     else:
         await call.message.answer(text="✅ Barchasi bekor qilindi! Ma'lumotlaringizni qayta kiritishingiz mumkin!")
     await state.finish()
+
+@dp.message_handler(state='*', commands='admin')
+async def admin_handler(message: types.Message, state: FSMContext):
+    if str(message.chat.id) in ADMINS:
+        await message.answer(text='✍️ Foydalanuvchilarga yubormoqchi bolgan text xabaringizni kiriting.')
+        await state.set_state('send_message_admin')
+
+@dp.message_handler(state='send_message_admin')
+async def send_message_admin_handler(message: types.Message, state: FSMContext):
+    await state.update_data({
+        'text_to_users': message.text
+    })
+    await message.answer(text='✍️ Foydalanuvchilarga yubormoqchi bolgan rasm yoki videoingizni kirititing.')
+    await state.set_state('send_photo_video')
+
+@dp.message_handler(state='send_photo_video', content_types=[types.ContentType.VIDEO, types.ContentType.PHOTO])
+async def send_photo_video_handler(message: types.Message, state: FSMContext):
+    data = await state.get_data()
+    await message.answer(text="Xabar yuborilmoqda....")
+    for user in users:
+        try:
+            if message.video is not None:
+                await dp.bot.send_video(video=message.video.file_id, caption=data['text_to_users'], chat_id=user)
+            else:
+                await dp.bot.send_photo(photo=message.photo[-1].file_id, caption=data['text_to_users'],
+                                        chat_id=user)
+        except Exception as e:
+            print(e)
+    await message.answer(text='✅ Yuborildi!')
+    await state.finish()
+
 
 if __name__ == "__main__":
     executor.start_polling(dp, skip_updates=True)
