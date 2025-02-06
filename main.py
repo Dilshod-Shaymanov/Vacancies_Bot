@@ -121,7 +121,7 @@ async def phone_number_handler(message: types.Message, state: FSMContext):
         await state.update_data({
             'phone_number': phone_number
         })
-        await message.answer(text="📁 Resume PDF shaklida yuboring!")
+        await message.answer(text="📁 Resume PDF shaklida yuboring!", reply_markup=ReplyKeyboardRemove())
         await state.set_state('resume')
     else:
         keyboard = ReplyKeyboardMarkup(resize_keyboard=True).add(
