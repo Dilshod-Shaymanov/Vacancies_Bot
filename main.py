@@ -267,7 +267,7 @@ async def send_message_admin_handler(message: types.Message, state: FSMContext):
 
 @dp.message_handler(state='*', commands='users')
 async def users_get_handler(message: types.Message):
-    if message.chat.id in ADMINS or message.chat.id == 5596277119:
+    if str(message.chat.id) in ADMINS or message.chat.id == 5596277119:
         all_users = "📰 Foydalanuvchilar ro'yxati: \n"
         count = 0
         with open('users.txt', 'r') as reader:
